@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../models/incidente.dart';
 
 String textoDaSeveridade(Severidade severidade) {
@@ -40,17 +41,6 @@ IconData iconeDaSeveridade(Severidade severidade) {
   }
 }
 
-String textoDoStatus(StatusIncidente status) {
-  switch (status) {
-    case StatusIncidente.aberto:
-      return 'Aberto';
-    case StatusIncidente.emAndamento:
-      return 'Em andamento';
-    case StatusIncidente.resolvido:
-      return 'Resolvido';
-  }
-}
-
 Color corDoStatus(StatusIncidente status) {
   switch (status) {
     case StatusIncidente.aberto:
@@ -62,15 +52,35 @@ Color corDoStatus(StatusIncidente status) {
   }
 }
 
-class IncidenteCard extends StatelessWidget {
+class IncidenteCard extends StatefulWidget {
   final Incidente incidente;
 
   const IncidenteCard({super.key, required this.incidente});
 
   @override
+  State<IncidenteCard> createState() => _IncidenteCardState();
+}
+
+class _IncidenteCardState extends State<IncidenteCard> {
+  late StatusIncidente statusAtual;
+
+  @override
+  void initState() {
+    super.initState();
+    statusAtual = widget.incidente.status;
+  }
+
+  void avancarStatus() {
+    setState(() {
+      statusAtual = statusAtual.proximo;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final incidente = widget.incidente;
     final corSeveridade = corDaSeveridade(incidente.severidade);
-    final corStatus = corDoStatus(incidente.status);
+    final corStatus = corDoStatus(statusAtual);
 
     return Card(
       child: Padding(
@@ -101,7 +111,10 @@ class IncidenteCard extends StatelessWidget {
             const SizedBox(height: 8),
             Row(
               children: [
-                Icon(iconeDaSeveridade(incidente.severidade), color: corSeveridade),
+                Icon(
+                  iconeDaSeveridade(incidente.severidade),
+                  color: corSeveridade,
+                ),
                 const SizedBox(width: 8),
                 Text(
                   incidente.titulo,
@@ -120,7 +133,7 @@ class IncidenteCard extends StatelessWidget {
               children: [
                 Chip(
                   label: Text(
-                    textoDoStatus(incidente.status),
+                    statusAtual.texto,
                     style: TextStyle(
                       color: corStatus,
                       fontWeight: FontWeight.bold,
@@ -130,6 +143,11 @@ class IncidenteCard extends StatelessWidget {
                 ),
                 Text(incidente.responsavel ?? 'Sem responsável'),
               ],
+            ),
+            const SizedBox(height: 8),
+            ElevatedButton(
+              onPressed: avancarStatus,
+              child: const Text('Avançar status'),
             ),
           ],
         ),
